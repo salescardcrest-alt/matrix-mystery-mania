@@ -207,6 +207,33 @@ async function exportPlayersToExcel() {
 
 /* ---------------- REGISTRATION ---------------- */
 
+function normalizePhone(phone) {
+  return (phone || "").replace(/\D/g, "");
+}
+
+function restoreProgressFromRecord(record) {
+  state.player.id = record.id;
+  state.player.name = record.name;
+  state.player.phone = record.phone;
+  state.player.email = record.email;
+  state.scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  state.roundTimes = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  [1, 2, 3, 4].forEach((r) => {
+    const rr = record[`round${r}`];
+    if (rr) {
+      state.scores[r] = rr.points || 0;
+      state.roundTimes[r] = rr.time || 0;
+    }
+  });
+}
+
+function highestCompletedRound(record) {
+  if (record.round3) return 3;
+  if (record.round2) return 2;
+  if (record.round1) return 1;
+  return 0;
+}
+
 $("btnStart").addEventListener("click", async () => {
   const name = $("playerName").value.trim();
   const phone = $("playerPhone").value.trim();
@@ -220,6 +247,30 @@ $("btnStart").addEventListener("click", async () => {
     return;
   }
 
+  $("btnStart").disabled = true;
+  const normalizedPhone = normalizePhone(phone);
+  const players = await getPlayers();
+  const existing = players.find((p) => normalizePhone(p.phone) === normalizedPhone);
+
+  if (existing) {
+    restoreProgressFromRecord(existing);
+    $("btnStart").disabled = false;
+
+    if (existing.status === "completed") {
+      showSummary();
+      return;
+    }
+    if (existing.status && existing.status.startsWith("eliminated-round-")) {
+      const r = parseInt(existing.status.split("-")[2], 10);
+      const rr = existing[`round${r}`];
+      showEliminated(r, rr ? rr.correct : 0, rr ? rr.total : CONFIG.questionsPerRound[r]);
+      return;
+    }
+    // still in progress — resume at the next round they haven't done yet
+    startWaitingFor(highestCompletedRound(existing) + 1);
+    return;
+  }
+
   state.player.id = `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   state.player.name = name;
   state.player.phone = phone;
@@ -227,7 +278,6 @@ $("btnStart").addEventListener("click", async () => {
   state.scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
   state.roundTimes = { 1: 0, 2: 0, 3: 0, 4: 0 };
 
-  $("btnStart").disabled = true;
   await savePlayerRecord({
     id: state.player.id,
     name: state.player.name,
@@ -782,7 +832,7 @@ $("btnReviewContinue").addEventListener("click", async () => {
   const totalTimeSoFar = state.roundTimes[1] + state.roundTimes[2] + state.roundTimes[3] + state.roundTimes[4];
 
   const patch = { totalScore: totalScoreSoFar, totalTime: totalTimeSoFar };
-  patch[`round${roundNum}`] = { correct: correctCount, total, time: roundTime };
+  patch[`round${roundNum}`] = { correct: correctCount, total, time: roundTime, points: state.scores[roundNum] };
 
   $("btnReviewContinue").disabled = true;
 
