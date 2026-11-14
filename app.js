@@ -236,6 +236,10 @@ function highestCompletedRound(record) {
   return 0;
 }
 
+$("playerPhone").addEventListener("input", () => {
+  $("playerPhone").value = $("playerPhone").value.replace(/\D/g, "").slice(0, 10);
+});
+
 $("btnStart").addEventListener("click", async () => {
   const name = $("playerName").value.trim();
   const phone = $("playerPhone").value.trim();
@@ -244,8 +248,9 @@ $("btnStart").addEventListener("click", async () => {
     $("playerName").focus();
     return;
   }
-  if (!phone || phone.replace(/\D/g, "").length < 7) {
+  if (!/^\d{10}$/.test(phone)) {
     $("playerPhone").focus();
+    alert("Please enter a valid 10-digit mobile number.");
     return;
   }
 
