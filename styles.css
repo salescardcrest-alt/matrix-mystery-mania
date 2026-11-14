@@ -137,7 +137,15 @@ body {
 .site-logout:hover { color: var(--bad); border-color: rgba(255,77,109,0.4); }
 
 @media (max-width: 520px) {
-  .site-logout { right: 10px; font-size: 0.62rem; padding: 5px 9px; }
+  .site-logout {
+    position: static;
+    transform: none;
+    display: block;
+    margin: 6px auto 0;
+    font-size: 0.62rem;
+    padding: 4px 10px;
+  }
+  .site-header { flex-wrap: wrap; }
 }
 
 .site-logo {
