@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrix Mystery Mania (3M)</title>
+<link rel="icon" href="assets/icons/matrix-club-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="site-header">
+  <img src="assets/icons/matrix-club-logo.png" alt="Matrix Club" class="site-logo">
+  <div class="site-wordmark">
+    <span class="site-title">MATRIX MYSTERY MANIA</span>
+    <span class="site-tag">Presented by Matrix Club</span>
+  </div>
+</div>
+
+<div class="bg-grid"></div>
+
+<div class="app">
+
+  <!-- REGISTRATION -->
+  <section id="screen-register" class="screen active">
+    <div class="panel hero-panel">
+      <img src="assets/icons/matrix-club-logo.png" alt="Matrix Club" class="hero-logo">
+      <div class="hero-title">3M</div>
+      <div class="hero-sub">Matrix Mystery Mania</div>
+      <label for="playerName">Player Name</label>
+      <input type="text" id="playerName" placeholder="e.g. Rahul Sharma" autocomplete="off">
+      <label for="playerPhone">Mobile Number</label>
+      <input type="tel" id="playerPhone" placeholder="e.g. 9876543210" autocomplete="off">
+      <label for="playerEmail">Institute Email (optional)</label>
+      <input type="email" id="playerEmail" placeholder="e.g. name@college.edu" autocomplete="off">
+      <button class="btn-primary" id="btnStart">Start Game</button>
+      <button class="btn-link" id="btnOpenAdminLogin" type="button">Admin Panel</button>
+    </div>
+  </section>
+
+  <!-- ELIMINATED -->
+  <section id="screen-eliminated" class="screen">
+    <div class="panel hero-panel elim-panel">
+      <div class="elim-icon">✕</div>
+      <div class="hero-sub" style="color:var(--bad);">Eliminated</div>
+      <h2 class="round-intro-title" id="elimTitle">You were eliminated after Round 1</h2>
+      <p class="intro-text" id="elimDesc"></p>
+      <div class="round-breakdown" id="elimBreakdown"></div>
+      <button class="btn-primary" id="btnElimDone">Back to Home</button>
+    </div>
+  </section>
+
+  <!-- ADMIN LOGIN -->
+  <section id="screen-admin-login" class="screen">
+    <div class="panel hero-panel">
+      <img src="assets/icons/matrix-club-logo.png" alt="Matrix Club" class="hero-logo small">
+      <div class="hero-sub">Admin Login</div>
+      <label for="adminMobile">Admin Mobile Number</label>
+      <input type="tel" id="adminMobile" placeholder="Mobile number" autocomplete="off">
+      <label for="adminEmail">Admin Email</label>
+      <input type="email" id="adminEmail" placeholder="Email" autocomplete="off">
+      <button class="btn-primary" id="btnAdminLogin">Login</button>
+      <div class="feedback" id="adminLoginError"></div>
+      <button class="btn-link" id="btnAdminLoginBack" type="button">Back</button>
+    </div>
+  </section>
+
+  <!-- ADMIN PANEL -->
+  <section id="screen-admin-panel" class="screen">
+    <div class="panel admin-panel">
+      <div class="round-header">
+        <h2>ADMIN PANEL — PLAYER RESULTS</h2>
+        <button class="btn-link" id="btnAdminLogout" type="button" style="margin:0;width:auto;">Logout</button>
+      </div>
+
+      <div class="game-control">
+        <div class="game-control-label">
+          <span class="game-control-dot"></span>
+          <span id="adminStageLabel">Lobby — game not started</span>
+        </div>
+        <button class="btn-primary" id="btnAdminStartNext" style="margin-top:10px;">Start Round 1</button>
+      </div>
+
+      <div class="admin-stats" id="adminStats"></div>
+      <div class="admin-list" id="adminList"></div>
+      <button class="btn-primary" id="btnAdminExport">Export All to Excel</button>
+      <button class="btn-danger" id="btnAdminReset" type="button">Restart Game — Reset All Data</button>
+    </div>
+  </section>
+
+  <!-- INSTRUCTIONS -->
+  <section id="screen-instructions" class="screen">
+    <div class="panel hero-panel">
+      <img src="assets/icons/matrix-club-logo.png" alt="Matrix Club" class="hero-logo small">
+      <div class="hero-sub">How It Works</div>
+
+      <div class="rules-list">
+        <div class="rule-item">
+          <div class="rule-num">1</div>
+          <div class="rule-text">
+            <div class="rule-title">Logo Recognition</div>
+            <div class="rule-desc">See an old company logo, type the brand name</div>
+          </div>
+          <div class="rule-timer">20s</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">2</div>
+          <div class="rule-text">
+            <div class="rule-title">Tagline Recognition</div>
+            <div class="rule-desc">See a brand's tagline, type the brand name</div>
+          </div>
+          <div class="rule-timer">20s</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">3</div>
+          <div class="rule-text">
+            <div class="rule-title">Tune Recognition</div>
+            <div class="rule-desc">Hear the jingle, pick the right brand</div>
+          </div>
+          <div class="rule-timer">60s</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">4</div>
+          <div class="rule-text">
+            <div class="rule-title">Final: Marketing MCQ</div>
+            <div class="rule-desc">10 multiple-choice marketing questions</div>
+          </div>
+          <div class="rule-timer">60s</div>
+        </div>
+      </div>
+
+      <p class="intro-text rules-note">Answers for each round are revealed once that round ends.</p>
+
+      <button class="btn-primary" id="btnInstructionsContinue">Let's Go</button>
+    </div>
+  </section>
+
+  <!-- WAITING ROOM -->
+  <section id="screen-waiting" class="screen">
+    <div class="panel hero-panel">
+      <div class="waiting-spinner"></div>
+      <div class="hero-sub">Waiting for Admin</div>
+      <h2 class="round-intro-title">Get ready for <span id="waitRoundLabel">Round 1</span></h2>
+      <p class="intro-text">The admin will start this round for everyone shortly. Stay on this screen — it will move on automatically.</p>
+    </div>
+  </section>
+
+  <!-- ROUND INTRO -->
+  <section id="screen-round-intro" class="screen">
+    <div class="panel">
+      <div class="round-pill" id="introRoundLabel">ROUND 1</div>
+      <h2 id="introTitle" class="round-intro-title"></h2>
+      <p class="intro-text" id="introDesc"></p>
+      <button class="btn-primary" id="btnRoundBegin">Begin Round</button>
+    </div>
+  </section>
+
+  <!-- ROUND 1 & 2 — TEXT ANSWER (logo / tagline) -->
+  <section id="screen-text-round" class="screen">
+    <div class="panel">
+      <div class="round-header">
+        <h2 id="textRoundTitle">ROUND 1 — LOGO RECOGNITION</h2>
+        <div class="timer" id="textTimer">30</div>
+      </div>
+      <div class="progress-dots" id="textDots"></div>
+      <div class="media-box" id="textMediaBox"></div>
+      <label for="textAnswer">Your Answer</label>
+      <input type="text" id="textAnswer" placeholder="Type the brand name..." autocomplete="off">
+      <button class="btn-primary" id="btnTextSubmit">Submit</button>
+      <div class="feedback" id="textFeedback"></div>
+    </div>
+  </section>
+
+  <!-- ROUND 3 — AUDIO -->
+  <section id="screen-audio-round" class="screen">
+    <div class="panel">
+      <div class="round-header">
+        <h2>ROUND 3 — TUNE RECOGNITION</h2>
+        <div class="timer" id="audioTimer">60</div>
+      </div>
+      <div class="progress-dots" id="audioDots"></div>
+      <div class="media-box">
+        <div class="audio-wrap">
+          <div class="audio-icon">🎵</div>
+          <audio id="audioPlayer" controls autoplay></audio>
+        </div>
+      </div>
+      <div class="mcq-options" id="audioOptions"></div>
+    </div>
+  </section>
+
+  <!-- FINAL ROUND — MCQ -->
+  <section id="screen-mcq-round" class="screen">
+    <div class="panel">
+      <div class="round-header">
+        <h2>FINAL ROUND — MARKETING MCQ</h2>
+        <div class="timer" id="mcqTimer">60</div>
+      </div>
+      <div class="progress-dots" id="mcqDots"></div>
+      <div class="tagline-display" id="mcqQuestion" style="margin-bottom:6px;"></div>
+      <div class="mcq-options" id="mcqOptions"></div>
+    </div>
+  </section>
+
+  <!-- ROUND REVIEW (shown when a round ends) -->
+  <section id="screen-round-review" class="screen">
+    <div class="panel">
+      <div class="round-pill" id="reviewRoundLabel">ROUND 1</div>
+      <h2 class="round-intro-title">Round Answers</h2>
+      <div class="intro-text" id="reviewTimeTotal" style="margin-bottom:10px;"></div>
+      <div class="review-list" id="reviewList"></div>
+      <button class="btn-primary" id="btnReviewContinue">Continue</button>
+    </div>
+  </section>
+
+  <!-- FINAL SUMMARY -->
+  <section id="screen-summary" class="screen">
+    <div class="panel score-summary hero-panel">
+      <img src="assets/icons/matrix-club-logo.png" alt="Matrix Club" class="hero-logo small">
+      <div class="hero-sub">Game Over</div>
+      <div style="color:var(--text-dim)">Total Score</div>
+      <div class="big-score" id="finalScore">0</div>
+      <div class="round-breakdown" id="roundBreakdown"></div>
+      <button class="btn-primary" id="btnPlayAgain">Play Again</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

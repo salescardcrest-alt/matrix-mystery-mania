@@ -1,0 +1,9 @@
+node_modules/
+server-data/
+.vercel
+
+# raw source material already processed into assets/ — not needed in the repo
+matrix logo/
+WhatsApp Audio*.mpeg
+30_Indian_and_International_Brands_and_Taglines.pdf
+matrix web
