@@ -27,6 +27,8 @@ const state = {
   questionStartTime: 0,
   roundTimes: { 1: 0, 2: 0, 3: 0, 4: 0 },
   roundLog: [],
+  selectedAudioIdx: -1,
+  selectedMcqIdx: -1,
 };
 
 function $(id) { return document.getElementById(id); }
@@ -625,6 +627,7 @@ function buildMcqOptions(correctBrand, poolExcludingCorrect) {
 
 function renderAudioQuestion() {
   state.answered = false;
+  state.selectedAudioIdx = -1;
   const item = state.roundQueue[state.roundIndex];
   renderDots("audioDots", state.roundQueue.length, state.roundIndex);
 
@@ -642,12 +645,17 @@ function renderAudioQuestion() {
     const btn = document.createElement("button");
     btn.className = "mcq-option";
     btn.textContent = optText;
-    btn.addEventListener("click", () => submitAudioAnswer(idx, false));
+    btn.addEventListener("click", () => {
+      state.selectedAudioIdx = idx;
+      optsEl.querySelectorAll(".mcq-option").forEach((b, i) => b.classList.toggle("selected", i === idx));
+      $("btnAudioSubmit").disabled = false;
+    });
     optsEl.appendChild(btn);
   });
 
+  $("btnAudioSubmit").disabled = true;
   state.questionStartTime = Date.now();
-  startTimer($("audioTimer"), CONFIG.timePerQuestion[3], () => submitAudioAnswer(-1, true));
+  startTimer($("audioTimer"), CONFIG.timePerQuestion[3], () => submitAudioAnswer(state.selectedAudioIdx, true));
 }
 
 function submitAudioAnswer(selectedIdx, timedOut) {
@@ -675,9 +683,12 @@ function submitAudioAnswer(selectedIdx, timedOut) {
     btn.disabled = true;
     if (idx === selectedIdx) btn.classList.add("selected");
   });
+  $("btnAudioSubmit").disabled = true;
 
   setTimeout(() => advanceTextOrAudio(), 1200);
 }
+
+$("btnAudioSubmit").addEventListener("click", () => submitAudioAnswer(state.selectedAudioIdx, false));
 
 function advanceTextOrAudio() {
   state.roundIndex++;
@@ -696,6 +707,7 @@ function advanceTextOrAudio() {
 
 function renderMcqQuestion() {
   state.answered = false;
+  state.selectedMcqIdx = -1;
   const item = state.roundQueue[state.roundIndex];
   renderDots("mcqDots", state.roundQueue.length, state.roundIndex);
 
@@ -707,12 +719,17 @@ function renderMcqQuestion() {
     const btn = document.createElement("button");
     btn.className = "mcq-option";
     btn.textContent = optText;
-    btn.addEventListener("click", () => submitMcqAnswer(idx, false));
+    btn.addEventListener("click", () => {
+      state.selectedMcqIdx = idx;
+      optsEl.querySelectorAll(".mcq-option").forEach((b, i) => b.classList.toggle("selected", i === idx));
+      $("btnMcqSubmit").disabled = false;
+    });
     optsEl.appendChild(btn);
   });
 
+  $("btnMcqSubmit").disabled = true;
   state.questionStartTime = Date.now();
-  startTimer($("mcqTimer"), CONFIG.timePerQuestion[4], () => submitMcqAnswer(-1, true));
+  startTimer($("mcqTimer"), CONFIG.timePerQuestion[4], () => submitMcqAnswer(state.selectedMcqIdx, true));
 }
 
 function submitMcqAnswer(selectedIdx, timedOut) {
@@ -738,6 +755,7 @@ function submitMcqAnswer(selectedIdx, timedOut) {
     btn.disabled = true;
     if (idx === selectedIdx) btn.classList.add("selected");
   });
+  $("btnMcqSubmit").disabled = true;
 
   setTimeout(() => {
     state.roundIndex++;
@@ -748,6 +766,8 @@ function submitMcqAnswer(selectedIdx, timedOut) {
     }
   }, 1200);
 }
+
+$("btnMcqSubmit").addEventListener("click", () => submitMcqAnswer(state.selectedMcqIdx, false));
 
 /* ---------------- TIMER ---------------- */
 
