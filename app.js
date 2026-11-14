@@ -180,6 +180,22 @@ async function updatePlayerRecord(id, patch) {
   });
 }
 
+/* Saves exactly which question within the current round the player is on,
+   plus their answers so far, so a page refresh can resume mid-round
+   instead of restarting the whole round. Fire-and-forget — gameplay
+   never waits on this. */
+function persistInProgress() {
+  if (!state.player.id) return;
+  updatePlayerRecord(state.player.id, {
+    inProgress: {
+      round: state.currentRound,
+      index: state.roundIndex,
+      log: state.roundLog,
+      queue: state.roundQueue,
+    },
+  }).catch(() => {});
+}
+
 async function resetAllPlayers() {
   await fetch("/api/players", {
     method: "POST",
@@ -325,8 +341,41 @@ function resumeExistingPlayer(existing) {
     showEliminated(r, rr ? rr.correct : 0, rr ? rr.total : CONFIG.questionsPerRound[r]);
     return;
   }
+
+  const inProg = existing.inProgress;
+  const inProgRoundFinalized = inProg && existing[`round${inProg.round}`];
+  if (inProg && inProg.round && !inProgRoundFinalized && Array.isArray(inProg.queue) && inProg.queue.length > 0) {
+    resumeMidRound(inProg);
+    return;
+  }
+
   // still in progress — resume at the next round they haven't done yet
   startWaitingFor(highestCompletedRound(existing) + 1);
+}
+
+function resumeMidRound(inProg) {
+  state.currentRound = inProg.round;
+  state.roundQueue = inProg.queue;
+  state.roundIndex = inProg.index;
+  state.roundLog = inProg.log || [];
+  state.scores[inProg.round] =
+    state.roundLog.filter((e) => e.correct).length * CONFIG.pointsPerCorrect[inProg.round];
+
+  if (state.roundIndex >= state.roundQueue.length) {
+    showRoundReview();
+    return;
+  }
+
+  if (inProg.round === 1 || inProg.round === 2) {
+    showScreen("screen-text-round");
+    renderTextQuestion();
+  } else if (inProg.round === 3) {
+    showScreen("screen-audio-round");
+    renderAudioQuestion();
+  } else if (inProg.round === 4) {
+    showScreen("screen-mcq-round");
+    renderMcqQuestion();
+  }
 }
 
 async function tryAutoResumeFromSession() {
@@ -630,6 +679,7 @@ function startRound(roundNum) {
   if (roundNum === 4) { pool = ROUND4_MCQS; count = CONFIG.questionsPerRound[4]; }
 
   state.roundQueue = pickRandom(pool, count);
+  persistInProgress();
 
   const info = ROUND_INFO[roundNum];
   $("introRoundLabel").textContent = info.label;
@@ -820,6 +870,7 @@ $("btnAudioSubmit").addEventListener("click", () => submitAudioAnswer(state.sele
 
 function advanceTextOrAudio() {
   state.roundIndex++;
+  persistInProgress();
   if (state.roundIndex >= state.roundQueue.length) {
     showRoundReview();
     return;
@@ -887,6 +938,7 @@ function submitMcqAnswer(selectedIdx, timedOut) {
 
   setTimeout(() => {
     state.roundIndex++;
+    persistInProgress();
     if (state.roundIndex >= state.roundQueue.length) {
       showRoundReview();
     } else {
@@ -983,7 +1035,7 @@ $("btnReviewContinue").addEventListener("click", async () => {
   const totalScoreSoFar = state.scores[1] + state.scores[2] + state.scores[3] + state.scores[4];
   const totalTimeSoFar = state.roundTimes[1] + state.roundTimes[2] + state.roundTimes[3] + state.roundTimes[4];
 
-  const patch = { totalScore: totalScoreSoFar, totalTime: totalTimeSoFar };
+  const patch = { totalScore: totalScoreSoFar, totalTime: totalTimeSoFar, inProgress: null };
   patch[`round${roundNum}`] = { correct: correctCount, total, time: roundTime, points: state.scores[roundNum] };
 
   $("btnReviewContinue").disabled = true;
