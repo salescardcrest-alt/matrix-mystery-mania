@@ -230,9 +230,10 @@ button, .mcq-option, .rule-item, .admin-card {
 
 .hero-title {
   font-family: 'Orbitron', sans-serif;
-  font-size: 2.4rem;
+  font-size: clamp(1.4rem, 6vw, 2rem);
   font-weight: 800;
-  letter-spacing: 5px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
   background: linear-gradient(100deg, #c9960e 20%, var(--gold) 40%, #fff6d8 50%, var(--gold) 60%, #c9960e 80%);
   background-size: 250% auto;
   -webkit-background-clip: text;
@@ -1012,7 +1013,6 @@ button:active { transform: scale(0.97); }
 @media (max-width: 520px) {
   .app { padding: 8px 12px 36px; }
   .panel { padding: 22px 18px; }
-  .hero-title { font-size: 1.9rem; }
   .site-title { font-size: 0.95rem; }
   .site-logo { height: 38px; }
   .site-header { gap: 10px; padding: 16px 14px 8px; }
