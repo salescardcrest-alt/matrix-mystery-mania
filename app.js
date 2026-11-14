@@ -659,8 +659,8 @@ function renderTextQuestion() {
   const item = state.roundQueue[state.roundIndex];
   const roundNum = state.currentRound;
 
-  $("textRoundTitle").textContent =
-    roundNum === 1 ? "ROUND 1 — LOGO RECOGNITION" : "ROUND 2 — TAGLINE RECOGNITION";
+  $("textRoundChip").textContent = roundNum === 1 ? "ROUND 1" : "ROUND 2";
+  $("textRoundTitle").textContent = roundNum === 1 ? "Logo Recognition" : "Tagline Recognition";
   renderDots("textDots", state.roundQueue.length, state.roundIndex);
 
   const mediaBox = $("textMediaBox");

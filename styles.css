@@ -435,6 +435,27 @@ button:active { transform: scale(0.97); }
   gap: 12px;
   flex-wrap: wrap;
 }
+.round-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.round-chip {
+  display: inline-block;
+  width: fit-content;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(245, 197, 24, 0.12);
+  border: 1px solid rgba(245, 197, 24, 0.35);
+  color: var(--gold);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
 .round-header h2 {
   margin: 0;
   font-size: 1.05rem;
@@ -442,6 +463,13 @@ button:active { transform: scale(0.97); }
   color: var(--gold-soft);
   flex: 1 1 160px;
   min-width: 0;
+}
+.round-header-info h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  flex: none;
 }
 .round-header .q-count {
   color: var(--text-dim);
