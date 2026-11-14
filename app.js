@@ -34,9 +34,12 @@ const state = {
 
 function $(id) { return document.getElementById(id); }
 
+const SCREENS_WITHOUT_PLAYER_LOGOUT = ["screen-register", "screen-admin-login", "screen-admin-panel"];
+
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
   $(id).classList.add("active");
+  $("btnPlayerLogout").style.display = SCREENS_WITHOUT_PLAYER_LOGOUT.includes(id) ? "none" : "";
 }
 
 function shuffle(arr) {
