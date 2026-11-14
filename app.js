@@ -397,11 +397,14 @@ async function renderAdminPanel() {
   const winners = finalists.filter((p) => p.finalCorrect === maxFinalCorrect);
 
   statsEl.innerHTML = `
-    <div class="stat-chip"><span class="stat-num">${players.length}</span><span class="stat-label">Registered</span></div>
-    <div class="stat-chip"><span class="stat-num">${eliminated.length}</span><span class="stat-label">Eliminated</span></div>
-    <div class="stat-chip"><span class="stat-num">${finalists.length}</span><span class="stat-label">Finished Final</span></div>
+    <div class="stat-chip"><span class="stat-num" id="statRegistered">0</span><span class="stat-label">Registered</span></div>
+    <div class="stat-chip"><span class="stat-num" id="statEliminated">0</span><span class="stat-label">Eliminated</span></div>
+    <div class="stat-chip"><span class="stat-num" id="statFinalists">0</span><span class="stat-label">Finished Final</span></div>
     <div class="stat-chip win"><span class="stat-num">${winners.length ? "🏆" : "—"}</span><span class="stat-label">${winners.length ? winners.map((w) => w.name).join(", ") : "No winner yet"}</span></div>
   `;
+  animateCountUp($("statRegistered"), players.length, 500);
+  animateCountUp($("statEliminated"), eliminated.length, 500);
+  animateCountUp($("statFinalists"), finalists.length, 500);
 
   const sorted = players.slice().sort((a, b) => {
     const rank = (p) => {
@@ -948,9 +951,30 @@ function animateCountUp(el, to, duration) {
   requestAnimationFrame(tick);
 }
 
+const CONFETTI_COLORS = ["#f5c518", "#ffe28a", "#7dd3ff", "#27e07a", "#ff4d6d"];
+
+function launchConfetti(containerId, count) {
+  const container = $(containerId);
+  container.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    piece.style.animationDuration = `${1.6 + Math.random() * 1.2}s`;
+    piece.style.animationDelay = `${Math.random() * 0.4}s`;
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    container.appendChild(piece);
+  }
+  setTimeout(() => {
+    container.innerHTML = "";
+  }, 3200);
+}
+
 function showSummary() {
   const total = state.scores[1] + state.scores[2] + state.scores[3] + state.scores[4];
   animateCountUp($("finalScore"), total, 900);
+  launchConfetti("confettiBurst", 60);
 
   const breakdown = $("roundBreakdown");
   breakdown.innerHTML = "";

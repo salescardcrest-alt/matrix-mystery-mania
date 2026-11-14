@@ -22,6 +22,8 @@
 </div>
 
 <div class="bg-grid"></div>
+<div class="orb orb-gold"></div>
+<div class="orb orb-cyan"></div>
 
 <div class="app">
 
@@ -184,7 +186,13 @@
       <div class="progress-dots" id="audioDots"></div>
       <div class="media-box">
         <div class="audio-wrap">
-          <div class="audio-icon">🎵</div>
+          <div class="equalizer">
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+          </div>
           <audio id="audioPlayer" controls autoplay></audio>
         </div>
       </div>
@@ -221,6 +229,7 @@
   <!-- FINAL SUMMARY -->
   <section id="screen-summary" class="screen">
     <div class="panel score-summary hero-panel">
+      <div class="confetti" id="confettiBurst"></div>
       <img src="assets/icons/matrix-club-logo.jpg" alt="Matrix Club" class="hero-logo small">
       <div class="hero-sub">Game Over</div>
       <div style="color:var(--text-dim)">Total Score</div>
