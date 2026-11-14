@@ -430,6 +430,11 @@ async function renderAdminPanel() {
     const card = document.createElement("div");
     card.className = "admin-card " + (isWinner ? "winner" : isLost ? "lost" : "");
 
+    const timeChipText = (val) => {
+      const n = Number(val);
+      return val !== null && val !== undefined && !Number.isNaN(n) ? formatSeconds(n) : "no time recorded";
+    };
+
     const roundChip = (r) => {
       const result = p[`round${r}`];
       if (!result) {
@@ -437,12 +442,11 @@ async function renderAdminPanel() {
         return `<div class="admin-round-chip ${reached ? "pending" : "skipped"}"><span class="chip-label">R${r} · ${ROUND_SHORT_NAMES[r]}</span><span class="chip-value">${reached ? "—" : "DNQ"}</span></div>`;
       }
       const passed = result.correct >= CONFIG.qualifyThreshold;
-      const timeLabel = typeof result.time === "number" ? ` · ${formatSeconds(result.time)}` : "";
-      return `<div class="admin-round-chip ${passed ? "pass" : "fail"}"><span class="chip-label">R${r} · ${ROUND_SHORT_NAMES[r]}</span><span class="chip-value">${passed ? "✓" : "✕"} ${result.correct}/${result.total}</span><span class="chip-time">${timeLabel.replace(" · ", "")}</span></div>`;
+      return `<div class="admin-round-chip ${passed ? "pass" : "fail"}"><span class="chip-label">R${r} · ${ROUND_SHORT_NAMES[r]}</span><span class="chip-value">${passed ? "✓" : "✕"} ${result.correct}/${result.total}</span><span class="chip-time">⏱ ${timeChipText(result.time)}</span></div>`;
     };
 
     const finalChip = p.status === "completed"
-      ? `<div class="admin-round-chip final"><span class="chip-label">Final · MCQ</span><span class="chip-value">${p.finalCorrect}/${CONFIG.questionsPerRound[4]}</span><span class="chip-time">${p.round4 && typeof p.round4.time === "number" ? formatSeconds(p.round4.time) : ""}</span></div>`
+      ? `<div class="admin-round-chip final"><span class="chip-label">Final · MCQ</span><span class="chip-value">${p.finalCorrect}/${CONFIG.questionsPerRound[4]}</span><span class="chip-time">⏱ ${timeChipText(p.round4 && p.round4.time)}</span></div>`
       : `<div class="admin-round-chip skipped"><span class="chip-label">Final · MCQ</span><span class="chip-value">—</span></div>`;
 
     card.innerHTML = `
@@ -462,7 +466,7 @@ async function renderAdminPanel() {
         ${roundChip(3)}
         ${finalChip}
       </div>
-      <div class="admin-score-line">Total Score: <strong>${p.totalScore || 0}</strong> pts · Total Time: <strong>${typeof p.totalTime === "number" ? formatSeconds(p.totalTime) : "—"}</strong> · Registered ${p.time}</div>
+      <div class="admin-score-line">Total Score: <strong>${p.totalScore || 0}</strong> pts · Total Time: <strong>${timeChipText(p.totalTime)}</strong> · Registered ${p.time}</div>
     `;
     listEl.appendChild(card);
   });
