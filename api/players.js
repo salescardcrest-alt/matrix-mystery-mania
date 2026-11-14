@@ -1,18 +1,20 @@
-const { kv } = require("@vercel/kv");
+const { getRedis } = require("./_redis");
 
 const KEY = "matrix3m:players";
 
 module.exports = async (req, res) => {
   try {
+    const redis = getRedis();
+
     if (req.method === "GET") {
-      const players = (await kv.get(KEY)) || [];
+      const players = (await redis.get(KEY)) || [];
       res.status(200).json(players);
       return;
     }
 
     if (req.method === "POST") {
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-      let players = (await kv.get(KEY)) || [];
+      let players = (await redis.get(KEY)) || [];
 
       if (body.action === "register") {
         players = [...players, body.record];
@@ -24,7 +26,7 @@ module.exports = async (req, res) => {
         players = [];
       }
 
-      await kv.set(KEY, players);
+      await redis.set(KEY, players);
       res.status(200).json(players);
       return;
     }

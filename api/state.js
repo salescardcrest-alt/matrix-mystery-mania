@@ -1,11 +1,13 @@
-const { kv } = require("@vercel/kv");
+const { getRedis } = require("./_redis");
 
 const KEY = "matrix3m:state";
 
 module.exports = async (req, res) => {
   try {
+    const redis = getRedis();
+
     if (req.method === "GET") {
-      const state = (await kv.get(KEY)) || { currentRound: 0 };
+      const state = (await redis.get(KEY)) || { currentRound: 0 };
       res.status(200).json(state);
       return;
     }
@@ -16,7 +18,7 @@ module.exports = async (req, res) => {
         currentRound: parseInt(body.currentRound, 10) || 0,
         updatedAt: new Date().toISOString(),
       };
-      await kv.set(KEY, state);
+      await redis.set(KEY, state);
       res.status(200).json(state);
       return;
     }
