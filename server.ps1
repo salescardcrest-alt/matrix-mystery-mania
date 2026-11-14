@@ -7,7 +7,7 @@ $dataDir = Join-Path $Root "server-data"
 if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir | Out-Null }
 $stateFile = Join-Path $dataDir "state.json"
 $playersFile = Join-Path $dataDir "players.json"
-if (-not (Test-Path $stateFile)) { '{"currentRound":0}' | Set-Content -Path $stateFile -Encoding utf8 }
+if (-not (Test-Path $stateFile)) { '{"currentRound":0,"resultsDeclared":false}' | Set-Content -Path $stateFile -Encoding utf8 }
 if (-not (Test-Path $playersFile)) { '[]' | Set-Content -Path $playersFile -Encoding utf8 }
 
 $lanIp = $null
@@ -93,9 +93,16 @@ while ($listener.IsListening) {
         }
         elseif ($path -eq "/api/state" -and $req.HttpMethod -eq "POST") {
             $body = Read-JsonBody $req
+            $current = Get-Content $stateFile -Raw | ConvertFrom-Json
+            if ($null -eq $current) { $current = [PSCustomObject]@{ currentRound = 0; resultsDeclared = $false } }
+
+            $newRound = if ($null -ne $body.currentRound) { [int]$body.currentRound } else { [int]$current.currentRound }
+            $newDeclared = if ($null -ne $body.resultsDeclared) { [bool]$body.resultsDeclared } else { [bool]$current.resultsDeclared }
+
             $state = [PSCustomObject]@{
-                currentRound = [int]$body.currentRound
-                updatedAt    = (Get-Date).ToString("o")
+                currentRound    = $newRound
+                resultsDeclared = $newDeclared
+                updatedAt       = (Get-Date).ToString("o")
             }
             ($state | ConvertTo-Json -Compress) | Set-Content -Path $stateFile -Encoding utf8
             Send-JsonRaw $res ($state | ConvertTo-Json -Compress)

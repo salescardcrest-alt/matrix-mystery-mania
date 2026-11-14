@@ -92,6 +92,7 @@
           <span id="adminStageLabel">Lobby — game not started</span>
         </div>
         <button class="btn-primary" id="btnAdminStartNext" style="margin-top:10px;">Start Round 1</button>
+        <button class="btn-secondary" id="btnDeclareResult" style="width:100%;margin-top:10px;">Declare Result</button>
       </div>
 
       <div class="admin-stats" id="adminStats"></div>
@@ -251,6 +252,8 @@
       <div style="color:var(--text-dim)">Total Score</div>
       <div class="big-score" id="finalScore">0</div>
       <div class="round-breakdown" id="roundBreakdown"></div>
+      <div class="results-status" id="resultsStatus">⏳ Waiting for the admin to declare the final results...</div>
+      <div class="leaderboard" id="leaderboardList"></div>
       <button class="btn-primary" id="btnPlayAgain">Play Again</button>
     </div>
   </section>

@@ -137,6 +137,7 @@ $("btnPlayerLogout").addEventListener("click", () => {
   clearTimer();
   clearInterval(waitPollTimer);
   clearInterval(adminPollTimer);
+  clearInterval(summaryPollTimer);
   clearSession();
 
   state.player = { id: "", name: "", phone: "", email: "" };
@@ -223,6 +224,28 @@ async function setGameState(round) {
     body: JSON.stringify({ currentRound: round }),
   });
   return res.json();
+}
+
+async function setResultsDeclared(declared) {
+  const res = await fetch("/api/state", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resultsDeclared: declared }),
+  });
+  return res.json();
+}
+
+/* Ranks completed players by final-round correct answers (desc),
+   breaking ties by total time taken (asc — faster wins the tie). */
+function computeRankings(players) {
+  return players
+    .filter((p) => p.status === "completed")
+    .slice()
+    .sort((a, b) => {
+      const byCorrect = (b.finalCorrect || 0) - (a.finalCorrect || 0);
+      if (byCorrect !== 0) return byCorrect;
+      return (a.totalTime || 0) - (b.totalTime || 0);
+    });
 }
 
 const STATUS_LABELS = {
@@ -513,6 +536,7 @@ $("btnAdminReset").addEventListener("click", async () => {
 
   await resetAllPlayers();
   await setGameState(0);
+  await setResultsDeclared(false);
   await renderAdminPanel();
   alert("All player data has been reset. The game is back at the lobby, ready to start fresh.");
 });
@@ -521,6 +545,14 @@ $("btnAdminStartNext").addEventListener("click", async () => {
   const state_ = await getGameState();
   const next = Math.min((state_.currentRound || 0) + 1, 4);
   await setGameState(next);
+  await renderAdminPanel();
+});
+
+$("btnDeclareResult").addEventListener("click", async () => {
+  if (!confirm("Declare the final results now? Every player who finished the final round will see the leaderboard (1st/2nd/3rd) on their own screen.")) {
+    return;
+  }
+  await setResultsDeclared(true);
   await renderAdminPanel();
 });
 
@@ -552,14 +584,20 @@ async function renderAdminPanel() {
 
   const finalists = players.filter((p) => p.status === "completed");
   const eliminated = players.filter((p) => p.status && p.status.startsWith("eliminated"));
-  const maxFinalCorrect = Math.max(0, ...finalists.map((p) => p.finalCorrect || 0));
-  const winners = finalists.filter((p) => p.finalCorrect === maxFinalCorrect);
+  const ranked = computeRankings(players);
+  const rankById = {};
+  ranked.forEach((p, i) => { rankById[p.id] = i + 1; });
+  const topThree = ranked.slice(0, 3);
+  const declared = !!gameState.resultsDeclared;
+
+  $("btnDeclareResult").textContent = declared ? "Results Declared ✓" : "Declare Result";
+  $("btnDeclareResult").disabled = declared || finalists.length === 0;
 
   statsEl.innerHTML = `
     <div class="stat-chip"><span class="stat-num" id="statRegistered">0</span><span class="stat-label">Registered</span></div>
     <div class="stat-chip"><span class="stat-num" id="statEliminated">0</span><span class="stat-label">Eliminated</span></div>
     <div class="stat-chip"><span class="stat-num" id="statFinalists">0</span><span class="stat-label">Finished Final</span></div>
-    <div class="stat-chip win"><span class="stat-num">${winners.length ? "🏆" : "—"}</span><span class="stat-label">${winners.length ? winners.map((w) => w.name).join(", ") : "No winner yet"}</span></div>
+    <div class="stat-chip win"><span class="stat-num">${topThree.length ? "🏆" : "—"}</span><span class="stat-label">${topThree.length ? topThree.map((w) => w.name).join(", ") : "No finalists yet"}</span></div>
   `;
   animateCountUp($("statRegistered"), players.length, 500);
   animateCountUp($("statEliminated"), eliminated.length, 500);
@@ -576,7 +614,8 @@ async function renderAdminPanel() {
   });
 
   sorted.forEach((p) => {
-    const isWinner = p.status === "completed" && p.finalCorrect === maxFinalCorrect;
+    const rank = rankById[p.id];
+    const isWinner = rank === 1;
     const isLost = p.status && p.status.startsWith("eliminated");
     const isProgress = p.status === "in-progress";
     const statusLabel = STATUS_LABELS[p.status] || "Unknown";
@@ -584,7 +623,7 @@ async function renderAdminPanel() {
     const initial = (p.name || "?").trim().charAt(0).toUpperCase() || "?";
 
     const card = document.createElement("div");
-    card.className = "admin-card " + (isWinner ? "winner" : isLost ? "lost" : "");
+    card.className = "admin-card " + (isWinner ? "winner" : rank === 2 ? "rank-silver" : rank === 3 ? "rank-bronze" : isLost ? "lost" : "");
 
     const timeChipText = (val) => {
       const n = Number(val);
@@ -610,7 +649,7 @@ async function renderAdminPanel() {
         <div class="admin-id">
           <div class="admin-avatar">${initial}</div>
           <div>
-            <div class="admin-name">${p.name}${isWinner ? ' <span class="winner-tag">🏆 WINNER</span>' : ""}</div>
+            <div class="admin-name">${p.name}${rank === 1 ? ' <span class="winner-tag gold">🏆 WINNER</span>' : rank === 2 ? ' <span class="winner-tag silver">🥈 2ND</span>' : rank === 3 ? ' <span class="winner-tag bronze">🥉 3RD</span>' : ""}</div>
             <div class="admin-contact">${p.phone}${p.email ? " · " + p.email : ""}</div>
           </div>
         </div>
@@ -1135,10 +1174,61 @@ function launchConfetti(containerId, count) {
   }, 3200);
 }
 
+function ordinal(n) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function medalFor(rank) {
+  return rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
+}
+
+function renderLeaderboardReveal(players) {
+  const ranked = computeRankings(players);
+  const myRank = ranked.findIndex((p) => p.id === state.player.id) + 1;
+
+  $("resultsStatus").className = "results-status declared";
+  $("resultsStatus").innerHTML = myRank
+    ? `${medalFor(myRank)} You finished <strong>${ordinal(myRank)}</strong> out of ${ranked.length} finalists!`
+    : "🏁 Results are in!";
+
+  const topThree = ranked.slice(0, 3);
+  $("leaderboardList").innerHTML = topThree
+    .map(
+      (p, i) => `
+        <div class="leaderboard-row ${p.id === state.player.id ? "me" : ""}">
+          <span class="leaderboard-medal">${medalFor(i + 1)}</span>
+          <span class="leaderboard-name">${p.name}</span>
+          <span class="leaderboard-score">${p.finalCorrect}/${CONFIG.questionsPerRound[4]}</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
+let summaryPollTimer = null;
+
+async function checkAndRevealResults() {
+  const gameState = await getGameState();
+  if (gameState.resultsDeclared) {
+    clearInterval(summaryPollTimer);
+    const players = await getPlayers();
+    renderLeaderboardReveal(players);
+  }
+}
+
 function showSummary() {
   const total = state.scores[1] + state.scores[2] + state.scores[3] + state.scores[4];
   animateCountUp($("finalScore"), total, 900);
   launchConfetti("confettiBurst", 60);
+
+  $("resultsStatus").className = "results-status waiting";
+  $("resultsStatus").textContent = "⏳ Waiting for the admin to declare the final results...";
+  $("leaderboardList").innerHTML = "";
+  clearInterval(summaryPollTimer);
+  checkAndRevealResults();
+  summaryPollTimer = setInterval(checkAndRevealResults, 5000);
 
   const breakdown = $("roundBreakdown");
   breakdown.innerHTML = "";
@@ -1165,6 +1255,7 @@ function showSummary() {
 }
 
 $("btnPlayAgain").addEventListener("click", () => {
+  clearInterval(summaryPollTimer);
   clearSession();
   state.scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
   state.roundTimes = { 1: 0, 2: 0, 3: 0, 4: 0 };

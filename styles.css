@@ -677,6 +677,52 @@ button:active { transform: scale(0.97); }
 .round-breakdown .row.total-time-row span:first-child { color: var(--gold-soft); font-weight: 700; }
 .round-breakdown .row.total-time-row span:last-child { color: var(--gold); }
 
+/* ---------- Player-side results reveal ---------- */
+
+.results-status {
+  margin: 18px 0 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.results-status.waiting {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+}
+.results-status.declared {
+  background: rgba(245,197,24,0.1);
+  border: 1px solid rgba(245,197,24,0.3);
+  color: var(--gold-soft);
+  animation: fadeInUp 0.4s ease;
+}
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-align: left;
+  opacity: 0;
+  animation: fadeInUp 0.3s ease forwards;
+}
+.leaderboard-row:nth-child(1) { animation-delay: 0.05s; }
+.leaderboard-row:nth-child(2) { animation-delay: 0.15s; }
+.leaderboard-row:nth-child(3) { animation-delay: 0.25s; }
+.leaderboard-row.me { border-color: rgba(245,197,24,0.4); background: rgba(245,197,24,0.06); }
+.leaderboard-medal { font-size: 1.1rem; flex: 0 0 auto; }
+.leaderboard-name { flex: 1; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leaderboard-score { font-weight: 700; color: var(--gold); font-size: 0.85rem; }
+
 .intro-text {
   color: var(--text-dim);
   text-align: center;
@@ -960,6 +1006,8 @@ button:active { transform: scale(0.97); }
   animation: fadeInUp 0.3s ease forwards, winnerPulse 2.4s ease-in-out 0.4s infinite;
 }
 .admin-card.lost { border-left-color: var(--bad); opacity: 0.85; }
+.admin-card.rank-silver { border-color: rgba(192,192,200,0.4); border-left-color: #c0c0c8; background: rgba(192,192,200,0.05); }
+.admin-card.rank-bronze { border-color: rgba(205,127,50,0.4); border-left-color: #cd7f32; background: rgba(205,127,50,0.05); }
 
 @keyframes winnerPulse {
   0%, 100% { box-shadow: 0 0 0 rgba(245,197,24,0); }
@@ -1006,6 +1054,8 @@ button:active { transform: scale(0.97); }
   letter-spacing: 0.5px;
   vertical-align: middle;
 }
+.winner-tag.silver { background: linear-gradient(90deg, #e0e0e6, #c0c0c8); color: #2a2a30; }
+.winner-tag.bronze { background: linear-gradient(90deg, #e3a361, #cd7f32); color: #2a1a08; }
 
 .admin-status {
   font-size: 0.68rem;
