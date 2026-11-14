@@ -6,7 +6,7 @@ const CONFIG = {
   questionsPerRound: { 1: 10, 2: 10, 3: 10, 4: 10 },
   timePerQuestion: { 1: 20, 2: 20, 3: 60, 4: 60 },
   pointsPerCorrect: { 1: 10, 2: 10, 3: 15, 4: 10 },
-  qualifyThreshold: 8,
+  qualifyThreshold: 7,
 };
 
 const ADMIN_CREDENTIALS = {
