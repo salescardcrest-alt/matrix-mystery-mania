@@ -261,6 +261,11 @@ button, .mcq-option, .rule-item, .admin-card {
   margin-top: 2px;
 }
 
+.hero-sub-gold {
+  color: var(--gold);
+  font-weight: 700;
+}
+
 /* ---------- Round pill (intro / review headers) ---------- */
 
 .round-pill {
