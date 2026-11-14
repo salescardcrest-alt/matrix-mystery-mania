@@ -237,39 +237,64 @@ input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,197,24,0
 button {
   cursor: pointer;
   border: none;
-  border-radius: 12px;
-  font-weight: 700;
+  border-radius: 16px;
+  font-weight: 800;
   font-size: 1rem;
-  padding: 14px 22px;
-  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  padding: 16px 22px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.1s ease;
   font-family: inherit;
+  letter-spacing: 0.3px;
 }
 button:active { transform: scale(0.97); }
+.btn-primary:active, .btn-secondary:active, .btn-danger:active { transform: translateY(6px); }
+
+/* CRED-style pressable "ledge" button: a solid color block sitting on
+   a darker shelf of the same hue; pressing it collapses the shelf so
+   the button visibly sinks down, like a real mechanical key. */
 
 .btn-primary {
   width: 100%;
   margin-top: 24px;
-  background: linear-gradient(90deg, var(--gold-soft), var(--gold));
+  background: var(--gold);
   color: #1a1400;
-  letter-spacing: 0.4px;
-  box-shadow: 0 10px 28px rgba(245, 197, 24, 0.22);
+  box-shadow: 0 6px 0 0 #b38d10, 0 14px 26px rgba(0,0,0,0.4);
+  transform: translateY(0);
 }
-.btn-primary:hover { filter: brightness(1.06); box-shadow: 0 10px 32px rgba(245, 197, 24, 0.35); }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:active {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 0 #b38d10, 0 4px 10px rgba(0,0,0,0.3);
+}
+.btn-primary:disabled {
+  filter: grayscale(0.4) brightness(0.8);
+  cursor: default;
+  transform: translateY(0);
+}
 
 .btn-secondary {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
+  background: #1c1c20;
   color: var(--text);
+  box-shadow: 0 6px 0 0 #050506, 0 10px 20px rgba(0,0,0,0.35);
+  transform: translateY(0);
+}
+.btn-secondary:active {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 0 #050506, 0 4px 10px rgba(0,0,0,0.25);
 }
 
 .btn-danger {
   width: 100%;
   margin-top: 10px;
-  background: transparent;
-  border: 1px solid rgba(255,77,109,0.4);
-  color: var(--bad);
+  background: var(--bad);
+  color: #2a0008;
+  box-shadow: 0 6px 0 0 #b02a42, 0 14px 26px rgba(255,77,109,0.25);
+  transform: translateY(0);
 }
-.btn-danger:hover { background: rgba(255,77,109,0.08); border-color: var(--bad); }
+.btn-danger:hover { filter: brightness(1.05); }
+.btn-danger:active {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 0 #b02a42, 0 4px 10px rgba(0,0,0,0.25);
+}
 
 .btn-link {
   display: block;
