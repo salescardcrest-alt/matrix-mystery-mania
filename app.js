@@ -88,6 +88,64 @@ function formatSeconds(totalSeconds) {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+
+let sharedAudioCtx = null;
+
+function unlockAudioContext() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  if (!sharedAudioCtx) sharedAudioCtx = new AC();
+  if (sharedAudioCtx.state === "suspended") sharedAudioCtx.resume().catch(() => {});
+}
+
+function playUnlockChime() {
+  if (!sharedAudioCtx) return;
+  try {
+    const ctx = sharedAudioCtx;
+    const now = ctx.currentTime;
+    [660, 880, 1320].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = now + i * 0.1;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.25, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.45);
+    });
+  } catch (e) {
+    /* audio unavailable — game still proceeds silently */
+  }
+}
+
+/* ---------------- PLAYER LOGOUT ---------------- */
+
+$("btnPlayerLogout").addEventListener("click", () => {
+  const ok = confirm(
+    "Log out and return to the home screen? Your progress is saved on the server — you can log back in anytime with the same phone number."
+  );
+  if (!ok) return;
+
+  clearTimer();
+  clearInterval(waitPollTimer);
+  clearInterval(adminPollTimer);
+
+  state.player = { id: "", name: "", phone: "", email: "" };
+  state.scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  state.roundTimes = { 1: 0, 2: 0, 3: 0, 4: 0 };
+
+  $("playerName").value = "";
+  $("playerPhone").value = "";
+  $("playerEmail").value = "";
+
+  showScreen("screen-register");
+});
+
 /* ---------------- PLAYER STORAGE (shared via server — visible to every device) ---------------- */
 
 async function getPlayers() {
@@ -228,6 +286,7 @@ $("playerPhone").addEventListener("input", () => {
 });
 
 $("btnStart").addEventListener("click", async () => {
+  unlockAudioContext();
   const name = $("playerName").value.trim();
   const phone = $("playerPhone").value.trim();
 
@@ -489,6 +548,7 @@ async function startWaitingFor(targetRound) {
     const gameState = await getGameState();
     if ((gameState.currentRound || 0) >= targetRound) {
       clearInterval(waitPollTimer);
+      playUnlockChime();
       startRound(targetRound);
     }
   };

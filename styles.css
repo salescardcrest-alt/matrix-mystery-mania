@@ -110,6 +110,7 @@ body {
 /* ---------- Site header ---------- */
 
 .site-header {
+  position: relative;
   width: 100%;
   display: flex;
   align-items: center;
@@ -117,6 +118,26 @@ body {
   gap: 14px;
   padding: 22px 16px 10px;
   text-align: left;
+}
+
+.site-logout {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+.site-logout:hover { color: var(--bad); border-color: rgba(255,77,109,0.4); }
+
+@media (max-width: 520px) {
+  .site-logout { right: 10px; font-size: 0.62rem; padding: 5px 9px; }
 }
 
 .site-logo {
