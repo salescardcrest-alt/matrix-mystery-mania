@@ -27,6 +27,7 @@ const state = {
   questionStartTime: 0,
   roundTimes: { 1: 0, 2: 0, 3: 0, 4: 0 },
   roundLog: [],
+  selectedTextIdx: -1,
   selectedAudioIdx: -1,
   selectedMcqIdx: -1,
 };
@@ -49,20 +50,6 @@ function shuffle(arr) {
 
 function pickRandom(pool, count) {
   return shuffle(pool).slice(0, Math.min(count, pool.length));
-}
-
-function normalize(str) {
-  return str
-    .toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]/g, "");
-}
-
-function isAnswerCorrect(userInput, item) {
-  const given = normalize(userInput);
-  if (!given) return false;
-  const accepted = [item.brand, ...(item.aliases || [])].map(normalize);
-  return accepted.includes(given);
 }
 
 function renderDots(containerId, total, currentIndex) {
@@ -510,8 +497,8 @@ async function startWaitingFor(targetRound) {
 /* ---------------- ROUND INTRO ---------------- */
 
 const ROUND_INFO = {
-  1: { label: "ROUND 1", title: "Logo Recognition", desc: `You'll see an old company logo. Type the brand name before the clock hits zero. ${CONFIG.timePerQuestion[1]} seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[1]} correct to qualify.` },
-  2: { label: "ROUND 2", title: "Tagline Recognition", desc: `You'll see a brand's tagline. Type the brand name before the clock hits zero. ${CONFIG.timePerQuestion[2]} seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[2]} correct to qualify.` },
+  1: { label: "ROUND 1", title: "Logo Recognition", desc: `You'll see an old company logo and pick the correct brand from the options. ${CONFIG.timePerQuestion[1]} seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[1]} correct to qualify.` },
+  2: { label: "ROUND 2", title: "Tagline Recognition", desc: `You'll see a brand's tagline and pick the correct brand from the options. ${CONFIG.timePerQuestion[2]} seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[2]} correct to qualify.` },
   3: { label: "ROUND 3", title: "Tune Recognition", desc: `Listen to the jingle and pick the correct brand from the options. 60 seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[3]} correct to reach the final.` },
   4: { label: "FINAL ROUND", title: "Marketing MCQ", desc: "10 multiple-choice marketing questions. 60 seconds per question. Highest correct answers wins!" },
 };
@@ -554,6 +541,7 @@ $("btnRoundBegin").addEventListener("click", () => {
 
 function renderTextQuestion() {
   state.answered = false;
+  state.selectedTextIdx = -1;
   const item = state.roundQueue[state.roundIndex];
   const roundNum = state.currentRound;
 
@@ -575,28 +563,46 @@ function renderTextQuestion() {
     mediaBox.appendChild(div);
   }
 
-  $("textAnswer").value = "";
-  $("textAnswer").disabled = false;
-  $("btnTextSubmit").disabled = false;
+  const { options, correctIndex } = buildMcqOptions(item.brand, item.category);
+  state.currentTextOptions = options;
+  state.currentTextCorrectIndex = correctIndex;
+
+  const optsEl = $("textOptions");
+  optsEl.innerHTML = "";
+  options.forEach((optText, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "mcq-option";
+    btn.textContent = optText;
+    btn.addEventListener("click", () => {
+      state.selectedTextIdx = idx;
+      optsEl.querySelectorAll(".mcq-option").forEach((b, i) => b.classList.toggle("selected", i === idx));
+      $("btnTextSubmit").disabled = false;
+    });
+    optsEl.appendChild(btn);
+  });
+
+  $("btnTextSubmit").disabled = true;
   $("textFeedback").className = "feedback";
   $("textFeedback").textContent = "";
-  $("textAnswer").focus();
 
   state.questionStartTime = Date.now();
-  startTimer($("textTimer"), CONFIG.timePerQuestion[roundNum], () => submitTextAnswer(true));
+  startTimer($("textTimer"), CONFIG.timePerQuestion[roundNum], () => submitTextAnswer(state.selectedTextIdx, true));
 }
 
-function submitTextAnswer(timedOut) {
+function submitTextAnswer(selectedIdx, timedOut) {
   if (state.answered) return;
   state.answered = true;
   clearTimer();
 
   const item = state.roundQueue[state.roundIndex];
-  const userInput = $("textAnswer").value;
-  const correct = !timedOut && isAnswerCorrect(userInput, item);
+  const correct = !timedOut && selectedIdx === state.currentTextCorrectIndex;
   const timeTaken = getElapsedSeconds(state.currentRound, timedOut);
 
-  $("textAnswer").disabled = true;
+  const buttons = $("textOptions").querySelectorAll(".mcq-option");
+  buttons.forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx === selectedIdx) btn.classList.add("selected");
+  });
   $("btnTextSubmit").disabled = true;
 
   const fb = $("textFeedback");
@@ -607,7 +613,7 @@ function submitTextAnswer(timedOut) {
 
   state.roundLog.push({
     prompt: state.currentRound === 1 ? "Logo" : `"${item.tagline}"`,
-    userAnswer: timedOut ? "(no answer)" : userInput || "(no answer)",
+    userAnswer: timedOut || selectedIdx < 0 ? "(no answer)" : state.currentTextOptions[selectedIdx],
     correctAnswer: item.brand,
     newLogo: state.currentRound === 1 ? item.newFile : null,
     correct,
@@ -617,15 +623,18 @@ function submitTextAnswer(timedOut) {
   setTimeout(() => advanceTextOrAudio(), 1400);
 }
 
-$("btnTextSubmit").addEventListener("click", () => submitTextAnswer(false));
-$("textAnswer").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") submitTextAnswer(false);
-});
+$("btnTextSubmit").addEventListener("click", () => submitTextAnswer(state.selectedTextIdx, false));
 
 /* ---------------- ROUND 3 — AUDIO (MCQ) ---------------- */
 
-function buildMcqOptions(correctBrand, poolExcludingCorrect) {
-  const distractors = shuffle(poolExcludingCorrect.filter((b) => b !== correctBrand)).slice(0, 3);
+function buildMcqOptions(correctBrand, category) {
+  const categoryPool = (CATEGORY_POOLS[category] || []).filter((b) => b !== correctBrand);
+  let distractorPool = categoryPool;
+  if (distractorPool.length < 3) {
+    const rest = BRAND_POOL.filter((b) => b !== correctBrand && !categoryPool.includes(b));
+    distractorPool = [...categoryPool, ...shuffle(rest)];
+  }
+  const distractors = shuffle(distractorPool).slice(0, 3);
   const options = shuffle([correctBrand, ...distractors]);
   return { options, correctIndex: options.indexOf(correctBrand) };
 }
@@ -640,7 +649,7 @@ function renderAudioQuestion() {
   player.src = item.file;
   player.play().catch(() => {});
 
-  const { options, correctIndex } = buildMcqOptions(item.brand, BRAND_POOL);
+  const { options, correctIndex } = buildMcqOptions(item.brand, item.category);
   state.currentAudioOptions = options;
   state.currentAudioCorrectIndex = correctIndex;
 

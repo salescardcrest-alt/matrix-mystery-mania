@@ -103,7 +103,7 @@
           <div class="rule-num">1</div>
           <div class="rule-text">
             <div class="rule-title">Logo Recognition</div>
-            <div class="rule-desc">See an old company logo, type the brand name</div>
+            <div class="rule-desc">See an old company logo, pick the right brand</div>
           </div>
           <div class="rule-timer">20s</div>
         </div>
@@ -111,7 +111,7 @@
           <div class="rule-num">2</div>
           <div class="rule-text">
             <div class="rule-title">Tagline Recognition</div>
-            <div class="rule-desc">See a brand's tagline, type the brand name</div>
+            <div class="rule-desc">See a brand's tagline, pick the right brand</div>
           </div>
           <div class="rule-timer">20s</div>
         </div>
@@ -168,9 +168,8 @@
       </div>
       <div class="progress-dots" id="textDots"></div>
       <div class="media-box" id="textMediaBox"></div>
-      <label for="textAnswer">Your Answer</label>
-      <input type="text" id="textAnswer" placeholder="Type the brand name..." autocomplete="off">
-      <button class="btn-primary" id="btnTextSubmit">Submit</button>
+      <div class="mcq-options" id="textOptions"></div>
+      <button class="btn-primary" id="btnTextSubmit" disabled>Submit</button>
       <div class="feedback" id="textFeedback"></div>
     </div>
   </section>
