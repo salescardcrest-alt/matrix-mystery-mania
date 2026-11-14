@@ -137,6 +137,7 @@ $("btnPlayerLogout").addEventListener("click", () => {
   clearTimer();
   clearInterval(waitPollTimer);
   clearInterval(adminPollTimer);
+  clearSession();
 
   state.player = { id: "", name: "", phone: "", email: "" };
   state.scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
@@ -284,6 +285,65 @@ function highestCompletedRound(record) {
   return 0;
 }
 
+/* ---------------- SESSION PERSISTENCE (survive a page refresh) ---------------- */
+
+const SESSION_STORAGE_KEY = "matrix3m_session";
+
+function saveSession() {
+  try {
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ phone: state.player.phone }));
+  } catch (e) {
+    /* storage unavailable — refresh just won't auto-resume */
+  }
+}
+
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch (e) {}
+}
+
+function loadSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY));
+  } catch (e) {
+    return null;
+  }
+}
+
+function resumeExistingPlayer(existing) {
+  restoreProgressFromRecord(existing);
+  saveSession();
+
+  if (existing.status === "completed") {
+    showSummary();
+    return;
+  }
+  if (existing.status && existing.status.startsWith("eliminated-round-")) {
+    const r = parseInt(existing.status.split("-")[2], 10);
+    const rr = existing[`round${r}`];
+    showEliminated(r, rr ? rr.correct : 0, rr ? rr.total : CONFIG.questionsPerRound[r]);
+    return;
+  }
+  // still in progress — resume at the next round they haven't done yet
+  startWaitingFor(highestCompletedRound(existing) + 1);
+}
+
+async function tryAutoResumeFromSession() {
+  const session = loadSession();
+  if (!session || !session.phone) return;
+
+  const normalizedPhone = normalizePhone(session.phone);
+  const players = await getPlayers();
+  const existing = players.find((p) => normalizePhone(p.phone) === normalizedPhone);
+
+  if (existing) {
+    resumeExistingPlayer(existing);
+  } else {
+    clearSession();
+  }
+}
+
 $("playerPhone").addEventListener("input", () => {
   $("playerPhone").value = $("playerPhone").value.replace(/\D/g, "").slice(0, 10);
 });
@@ -309,21 +369,8 @@ $("btnStart").addEventListener("click", async () => {
   const existing = players.find((p) => normalizePhone(p.phone) === normalizedPhone);
 
   if (existing) {
-    restoreProgressFromRecord(existing);
     $("btnStart").disabled = false;
-
-    if (existing.status === "completed") {
-      showSummary();
-      return;
-    }
-    if (existing.status && existing.status.startsWith("eliminated-round-")) {
-      const r = parseInt(existing.status.split("-")[2], 10);
-      const rr = existing[`round${r}`];
-      showEliminated(r, rr ? rr.correct : 0, rr ? rr.total : CONFIG.questionsPerRound[r]);
-      return;
-    }
-    // still in progress — resume at the next round they haven't done yet
-    startWaitingFor(highestCompletedRound(existing) + 1);
+    resumeExistingPlayer(existing);
     return;
   }
 
@@ -347,6 +394,7 @@ $("btnStart").addEventListener("click", async () => {
     finalCorrect: 0,
     totalScore: 0,
   });
+  saveSession();
   $("btnStart").disabled = false;
 
   showScreen("screen-instructions");
@@ -993,6 +1041,7 @@ function showEliminated(roundNum, correctCount, total) {
 }
 
 $("btnElimDone").addEventListener("click", () => {
+  clearSession();
   state.scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
   state.roundTimes = { 1: 0, 2: 0, 3: 0, 4: 0 };
   $("playerName").value = state.player.name;
@@ -1064,6 +1113,7 @@ function showSummary() {
 }
 
 $("btnPlayAgain").addEventListener("click", () => {
+  clearSession();
   state.scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
   state.roundTimes = { 1: 0, 2: 0, 3: 0, 4: 0 };
   $("playerName").value = state.player.name;
@@ -1071,3 +1121,7 @@ $("btnPlayAgain").addEventListener("click", () => {
   $("playerEmail").value = state.player.email;
   showScreen("screen-register");
 });
+
+/* ---------------- STARTUP ---------------- */
+
+tryAutoResumeFromSession();
