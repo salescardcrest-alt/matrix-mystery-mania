@@ -3,10 +3,10 @@
    ============================================================ */
 
 const CONFIG = {
-  questionsPerRound: { 1: 5, 2: 5, 3: 5, 4: 10 },
+  questionsPerRound: { 1: 10, 2: 10, 3: 10, 4: 10 },
   timePerQuestion: { 1: 20, 2: 20, 3: 60, 4: 60 },
   pointsPerCorrect: { 1: 10, 2: 10, 3: 15, 4: 10 },
-  qualifyThreshold: 3,
+  qualifyThreshold: 8,
 };
 
 const ADMIN_CREDENTIALS = {
