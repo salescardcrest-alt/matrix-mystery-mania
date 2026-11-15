@@ -6,7 +6,7 @@ const CONFIG = {
   questionsPerRound: { 1: 10, 2: 10, 3: 10, 4: 10 },
   timePerQuestion: { 1: 20, 2: 20, 3: 60, 4: 60 },
   pointsPerCorrect: { 1: 10, 2: 10, 3: 15, 4: 10 },
-  qualifyThreshold: 7,
+  qualifyThreshold: { 1: 5, 2: 7, 3: 7 },
 };
 
 const ADMIN_CREDENTIALS = {
@@ -636,7 +636,7 @@ async function renderAdminPanel() {
         const reached = !isLost || eliminatedRound > r;
         return `<div class="admin-round-chip ${reached ? "pending" : "skipped"}"><span class="chip-label">R${r} · ${ROUND_SHORT_NAMES[r]}</span><span class="chip-value">${reached ? "—" : "DNQ"}</span></div>`;
       }
-      const passed = result.correct >= CONFIG.qualifyThreshold;
+      const passed = result.correct >= CONFIG.qualifyThreshold[r];
       return `<div class="admin-round-chip ${passed ? "pass" : "fail"}"><span class="chip-label">R${r} · ${ROUND_SHORT_NAMES[r]}</span><span class="chip-value">${passed ? "✓" : "✕"} ${result.correct}/${result.total}</span><span class="chip-time">⏱ ${timeChipText(result.time)}</span></div>`;
     };
 
@@ -699,9 +699,9 @@ async function startWaitingFor(targetRound) {
 /* ---------------- ROUND INTRO ---------------- */
 
 const ROUND_INFO = {
-  1: { label: "ROUND 1", title: "Logo Recognition", desc: `You'll see an old company logo and pick the correct brand from the options. ${CONFIG.timePerQuestion[1]} seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[1]} correct to qualify.` },
-  2: { label: "ROUND 2", title: "Tagline Recognition", desc: `You'll see a brand's tagline and pick the correct brand from the options. ${CONFIG.timePerQuestion[2]} seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[2]} correct to qualify.` },
-  3: { label: "ROUND 3", title: "Tune Recognition", desc: `Listen to the jingle and pick the correct brand from the options. 60 seconds per question. Get at least ${CONFIG.qualifyThreshold} out of ${CONFIG.questionsPerRound[3]} correct to reach the final.` },
+  1: { label: "ROUND 1", title: "Logo Recognition", desc: `You'll see an old company logo and pick the correct brand from the options. ${CONFIG.timePerQuestion[1]} seconds per question. Get at least ${CONFIG.qualifyThreshold[1]} out of ${CONFIG.questionsPerRound[1]} correct to qualify.` },
+  2: { label: "ROUND 2", title: "Tagline Recognition", desc: `You'll see a brand's tagline and pick the correct brand from the options. ${CONFIG.timePerQuestion[2]} seconds per question. Get at least ${CONFIG.qualifyThreshold[2]} out of ${CONFIG.questionsPerRound[2]} correct to qualify.` },
+  3: { label: "ROUND 3", title: "Tune Recognition", desc: `Listen to the jingle and pick the correct brand from the options. 60 seconds per question. Get at least ${CONFIG.qualifyThreshold[3]} out of ${CONFIG.questionsPerRound[3]} correct to reach the final.` },
   4: { label: "FINAL ROUND", title: "Marketing MCQ", desc: "10 multiple-choice marketing questions. 60 seconds per question. Highest correct answers wins!" },
 };
 
@@ -1079,7 +1079,7 @@ $("btnReviewContinue").addEventListener("click", async () => {
 
   $("btnReviewContinue").disabled = true;
 
-  if (roundNum <= 3 && correctCount < CONFIG.qualifyThreshold) {
+  if (roundNum <= 3 && correctCount < CONFIG.qualifyThreshold[roundNum]) {
     patch.status = `eliminated-round-${roundNum}`;
     await updatePlayerRecord(state.player.id, patch);
     $("btnReviewContinue").disabled = false;
@@ -1114,7 +1114,7 @@ function showEliminated(roundNum, correctCount, total) {
   $("elimTitle").textContent = `Eliminated after Round ${roundNum}`;
   $("elimDesc").textContent =
     `${ROUND_NAMES[roundNum]}: you got ${correctCount} out of ${total} correct. ` +
-    `You needed at least ${CONFIG.qualifyThreshold} to qualify for the next round.`;
+    `You needed at least ${CONFIG.qualifyThreshold[roundNum]} to qualify for the next round.`;
 
   const breakdown = $("elimBreakdown");
   breakdown.innerHTML = "";
