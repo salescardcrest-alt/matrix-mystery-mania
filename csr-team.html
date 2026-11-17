@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a0c">
+  <title>CSR Boardroom Challenge — Team</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="csr-boardroom.css">
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="orb orb-gold" aria-hidden="true"></div>
+  <div class="orb orb-cyan" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <span class="site-wordmark">
+      <span class="site-title">BECG SIMULATION</span>
+      <span class="site-tag">CSR Boardroom Challenge · Team device</span>
+    </span>
+    <span class="edition-tag">TEAM VIEW</span>
+  </header>
+
+  <main class="app team-app">
+    <div class="team-dashboard">
+      <div class="panel login-panel" id="loginView">
+        <div class="section-kicker">JOIN THE BOARDROOM</div>
+        <h2>Enter your team code</h2>
+        <p class="muted">Your facilitator will show this on the main screen. One code per team — keep it private from other teams.</p>
+        <form id="loginForm">
+          <label class="pin-setup-field" for="teamCodeInput">
+            <span>TEAM CODE</span>
+            <input id="teamCodeInput" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="e.g. 4821" required>
+          </label>
+          <p class="pin-error" id="loginError" role="alert" hidden></p>
+          <button class="btn-primary" type="submit">Join challenge <span aria-hidden="true">→</span></button>
+        </form>
+      </div>
+
+      <div class="panel round-panel" id="waitingView" hidden>
+        <div class="section-kicker" id="teamNameLabel"></div>
+        <h2>Waiting for the facilitator…</h2>
+        <p class="muted" id="waitingMessage">The challenge hasn’t started yet. Stay on this screen — it will update automatically.</p>
+        <button class="btn-link" id="teamLogoutButton" type="button">Logout</button>
+      </div>
+
+      <div class="panel round-panel" id="teamRoundView" hidden>
+        <div class="round-topline">
+          <div>
+            <span class="round-pill" id="teamRoundNumber"></span>
+            <div class="round-progress" id="teamRoundProgress" aria-label="Round progress"></div>
+          </div>
+          <div class="timer-box">
+            <span class="timer-caption">TIME LEFT</span>
+            <strong class="timer" id="teamRoundTimer" aria-live="off">01:30</strong>
+          </div>
+        </div>
+        <span class="section-kicker" id="teamNameLabel2"></span>
+        <h2 id="teamRoundTitle"></h2>
+        <p class="question" id="teamRoundQuestion"></p>
+        <div class="data-clue">
+          <span class="clue-label"><span aria-hidden="true">✦</span> BOARDROOM BRIEF</span>
+          <p id="teamRoundClue"></p>
+        </div>
+        <div class="decision-heading">
+          <div>
+            <span class="section-kicker">YOUR TEAM’S DECISION</span>
+            <h3>Choose and submit your answer</h3>
+          </div>
+        </div>
+        <div id="teamAnswerArea"></div>
+        <button class="btn-primary" id="teamSubmitButton" type="button">Submit answer</button>
+        <p class="privacy-note" id="teamSubmitStatus"></p>
+        <button class="btn-link" id="teamLogoutButton2" type="button">Logout</button>
+      </div>
+
+      <div class="panel result-panel" id="teamResultView" hidden>
+        <div class="result-icon" aria-hidden="true">✓</div>
+        <span class="section-kicker">ROUND LOCKED</span>
+        <h2 id="teamResultTitle"></h2>
+        <p class="muted">Your submission for this round has been scored. Wait for the facilitator to start the next round.</p>
+        <div class="table-wrap">
+          <table class="results-table">
+            <thead><tr><th>POINTS</th><th>TRUST CHANGE</th><th>LIVES IMPACTED</th></tr></thead>
+            <tbody id="teamResultBody"></tbody>
+          </table>
+        </div>
+        <button class="btn-link" id="teamLogoutButton3" type="button">Logout</button>
+      </div>
+
+      <div class="panel result-panel" id="teamFinalView" hidden>
+        <div class="trophy" aria-hidden="true">✦</div>
+        <span class="section-kicker">CHALLENGE COMPLETE</span>
+        <h2>All six rounds are done</h2>
+        <p class="muted">Check the main screen for the final standings.</p>
+        <button class="btn-link" id="teamLogoutButton4" type="button">Logout</button>
+      </div>
+    </div>
+    <footer>BUILT FOR BETTER DECISIONS <span>·</span> CSR BOARDROOM CHALLENGE</footer>
+  </main>
+  <script src="csr-rounds.js"></script>
+  <script src="csr-team.js"></script>
+</body>
+</html>
