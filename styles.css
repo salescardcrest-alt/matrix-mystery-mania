@@ -176,21 +176,6 @@ body {
   color: var(--text-dim);
 }
 
-.site-switch {
-  display: table;
-  margin: 2px auto 8px;
-  padding: 7px 12px;
-  border: 1px solid rgba(245,197,24,0.22);
-  border-radius: 999px;
-  color: var(--gold-soft);
-  background: rgba(245,197,24,0.06);
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: border-color 0.2s, background 0.2s;
-}
-.site-switch:hover { border-color: rgba(245,197,24,0.55); background: rgba(245,197,24,0.11); }
-
 /* ---------- Layout ---------- */
 
 .app {
